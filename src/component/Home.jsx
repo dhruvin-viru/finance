@@ -6,9 +6,8 @@ function Home() {
     // localStorage.clear()
 
     const [data, setdata] = useState([])
-    const [suggetion, setsuggetion] = useState([])
     const [balance, setbalance] = useState()
-    var newBalance;
+    const [category, setcategory] = useState([])
     
     const fetchbal = () => {
         const temp = JSON.parse(localStorage.getItem('finance_balance'))
@@ -27,6 +26,7 @@ function Home() {
         }
         getdata()
         fetchbal()
+        handleCategory()
     }, [fetchbal])
 
     const addtrans = (formdata) => {
@@ -46,7 +46,7 @@ function Home() {
         }
 
         const updated = [...temp, newdata]
-        newBalance = updated.reduce((total, val) => {
+        const newBalance = updated.reduce((total, val) => {
             return total + Number(val.iamount)
         }, 0)
 
@@ -54,6 +54,8 @@ function Home() {
 
         localStorage.setItem('finance', JSON.stringify(updated))
         getdata()
+        fetchbal()
+        handleCategory()
     }
     
     const init = {
@@ -82,6 +84,33 @@ function Home() {
         }
     })
 
+    const handleDelete = (index) => {
+        const temp = JSON.parse(localStorage.getItem('finance'))
+        temp.splice(index, 1)
+        const newBalance = temp.reduce((total, val) => {
+            return total + Number(val.iamount)
+        }, 0)
+        localStorage.setItem('finance_balance', JSON.stringify(newBalance))
+        localStorage.setItem('finance', JSON.stringify(temp))
+        getdata()
+        fetchbal()
+    }
+
+    const handleFilter = (e) => {
+        const temp = JSON.parse(localStorage.getItem('finance'))
+        if (e === '') {
+            setdata(temp)
+        } else {
+            const filtered = temp.filter((val) => val.category === e)
+            setdata(filtered)
+        }
+    }
+
+    const handleCategory = () => {
+        const temp = JSON.parse(localStorage.getItem('finance'))
+        const categories = temp.map((val) => val.category)
+        setcategory(categories)
+    }
 
     return (
         <div>
@@ -123,17 +152,6 @@ function Home() {
                             onChange={handleChange}
                             onBlur={handleBlur}
                         />
-                        <div className='suggestion-box'>
-                            <ul>
-                                {
-                                    suggetion?.map((val, i) => {
-                                        return (
-                                            <li>{val}</li>
-                                        )
-                                    })
-                                }
-                            </ul>
-                        </div>
                         <div>
                             {(errors.category && touched.category) && <font color='red'>{errors.category}</font>}
                         </div>
@@ -174,7 +192,20 @@ function Home() {
 
             <div>
                 <div>
-                    Balance:{balance}
+                    <div>
+                        Balance:{balance ? balance : 0}
+                    </div>
+                    <div>
+                        <select
+                            name='filter'
+                            onChange={(e) => {handleFilter(e.target.value)}}
+                        >
+                            <option value="">All Categories</option>
+                            {category.map((val, i) => (
+                                <option key={i} value={val}>{val}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <table>
@@ -185,6 +216,7 @@ function Home() {
                                 <td>Category</td>
                                 <td>Date</td>
                                 <td>Amount</td>
+                                <td>Action</td>
                             </tr>
                         </thead>
                         <tbody>
@@ -197,6 +229,7 @@ function Home() {
                                             <td>{val.category}</td>
                                             <td>{val.date}</td>
                                             <td>{Math.abs(val.iamount)}</td>
+                                            <td><button type="submit" onClick={()=>{handleDelete(i)}}>Delete</button></td>
                                         </tr>
                                     )
                                 })
