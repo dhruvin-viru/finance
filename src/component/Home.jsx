@@ -8,27 +8,36 @@ function Home() {
     const [data, setdata] = useState([])
     const [balance, setbalance] = useState()
     const [category, setcategory] = useState([])
-    
+
     const fetchbal = () => {
         const temp = JSON.parse(localStorage.getItem('finance_balance'))
         setbalance(temp)
     }
-
-    const getdata = () => {
-        const temp = JSON.parse(localStorage.getItem('finance'))
-        setdata(temp || [])
-    }
-
+    
     useEffect(() => {
-        const check = JSON.parse(localStorage.getItem('finance'))
-        if (check == null) {
+        const storedFinance = JSON.parse(localStorage.getItem('finance'))
+        if (storedFinance == null) {
             localStorage.setItem('finance', JSON.stringify([]))
         }
         getdata()
         fetchbal()
         handleCategory()
-    }, [fetchbal])
+    }, [])
 
+    const getdata = () => {
+        const temp = JSON.parse(localStorage.getItem('finance'))
+        setdata(temp)
+    }
+
+    const handleFilter = (e) => {
+        const temp = JSON.parse(localStorage.getItem('finance'))
+        if (!temp || e === 'allcat') {
+            setdata(temp)
+            return
+        }
+        const filtered = temp.filter((val) => val.category === e)
+        setdata(filtered)
+    }
     const addtrans = (formdata) => {
         const amount = formdata.iamount
         const desc = formdata.desc
@@ -57,7 +66,7 @@ function Home() {
         fetchbal()
         handleCategory()
     }
-    
+
     const init = {
         iamount: '',
         desc: '',
@@ -96,15 +105,6 @@ function Home() {
         fetchbal()
     }
 
-    const handleFilter = (e) => {
-        const temp = JSON.parse(localStorage.getItem('finance'))
-        if (e === '') {
-            setdata(temp)
-        } else {
-            const filtered = temp.filter((val) => val.category === e)
-            setdata(filtered)
-        }
-    }
 
     const handleCategory = () => {
         const temp = JSON.parse(localStorage.getItem('finance'))
@@ -198,9 +198,9 @@ function Home() {
                     <div>
                         <select
                             name='filter'
-                            onChange={(e) => {handleFilter(e.target.value)}}
+                            onChange={(e) => { handleFilter(e.target.value) }}
                         >
-                            <option value="">All Categories</option>
+                            <option value="allcat">All Categories</option>
                             {category.map((val, i) => (
                                 <option key={i} value={val}>{val}</option>
                             ))}
@@ -224,12 +224,12 @@ function Home() {
                                 data?.map((val, i) => {
                                     return (
                                         <tr key={i}>
-                                            <td>{val.type}</td>
+                                            <td style={{ 'textTransform': 'capitalize' }}>{val.type}</td>
                                             <td>{val.desc}</td>
                                             <td>{val.category}</td>
                                             <td>{val.date}</td>
                                             <td>{Math.abs(val.iamount)}</td>
-                                            <td><button type="submit" onClick={()=>{handleDelete(i)}}>Delete</button></td>
+                                            <td><button type="submit" onClick={() => { handleDelete(i) }}>Delete</button></td>
                                         </tr>
                                     )
                                 })
